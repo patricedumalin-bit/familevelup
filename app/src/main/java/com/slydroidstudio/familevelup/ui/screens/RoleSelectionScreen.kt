@@ -2,7 +2,7 @@ package com.slydroidstudio.familevelup.ui.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -14,7 +14,8 @@ import com.slydroidstudio.familevelup.data.model.UserRole
 @Composable
 fun RoleSelectionScreen(
     users: List<User>,
-    onSelectUser: (User) -> Unit
+    onSelectUser: (User) -> Unit,
+    onSelectParent: () -> Unit
 ) {
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -50,7 +51,13 @@ fun RoleSelectionScreen(
 
             users.forEach { user ->
                 Button(
-                    onClick = { onSelectUser(user) },
+                    onClick = {
+                        if (user.role == UserRole.PARENT) {
+                            onSelectParent()
+                        } else {
+                            onSelectUser(user)
+                        }
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 6.dp),
@@ -62,7 +69,7 @@ fun RoleSelectionScreen(
                     )
                 ) {
                     Text(
-                        text = if (user.role == UserRole.PARENT) "🛡️ ${user.name} (Mode Parent)" else "⚔️ ${user.name} (Niveau ${user.level})",
+                        text = if (user.role == UserRole.PARENT) "🛡️ ${user.name} (Mode Parent - Biométrique)" else "⚔️ ${user.name} (Niveau ${user.level})",
                         fontSize = 16.sp,
                         color = MaterialTheme.colorScheme.onSurface
                     )

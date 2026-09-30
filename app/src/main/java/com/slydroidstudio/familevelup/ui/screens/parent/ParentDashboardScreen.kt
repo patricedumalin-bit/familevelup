@@ -1,17 +1,20 @@
 package com.slydroidstudio.familevelup.ui.screens.parent
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.slydroidstudio.familevelup.data.model.ActivityLogItem
 import com.slydroidstudio.familevelup.data.model.Quest
+import com.slydroidstudio.familevelup.data.model.QuestFrequency
 import com.slydroidstudio.familevelup.data.model.QuestStatus
+import com.slydroidstudio.familevelup.data.model.RedeemedReward
 import com.slydroidstudio.familevelup.data.model.User
 import com.slydroidstudio.familevelup.data.model.UserRole
 
@@ -20,28 +23,76 @@ import com.slydroidstudio.familevelup.data.model.UserRole
 fun ParentDashboardScreen(
     users: List<User>,
     quests: List<Quest>,
-    onAddQuest: (String, Int, Int, String) -> Unit,
+    redeemedRewards: List<RedeemedReward>,
+    activityLog: List<ActivityLogItem>,
+    householdName: String,
+    onAddQuest: (String, Int, Int, String, QuestFrequency, Boolean, Int) -> Unit,
+    onAddRaid: (String, Int, Int) -> Unit,
     onValidateQuest: (String) -> Unit,
     onRequestRevision: (String) -> Unit,
+    onFulfillReward: (String) -> Unit,
+    onConsumeReward: (String) -> Unit,
+    onPayoutPocketMoney: (String, Double) -> Unit,
+    onNavigateToSettings: () -> Unit,
+    onNavigateToProfiles: () -> Unit,
     onLogout: () -> Unit
 ) {
+    var selectedTab by remember { mutableStateOf(0) }
     var showAddDialog by remember { mutableStateOf(false) }
     var newTitle by remember { mutableStateOf("") }
-    var newXp by remember { mutableStateOf("15") }
-    var newCoins by remember { mutableStateOf("15") }
+    var newXp by remember { mutableStateOf("25") }
+    var newCoins by remember { mutableStateOf("25") }
+
     val children = users.filter { it.role == UserRole.CHILD }
-    var selectedChildId by remember { mutableStateOf(children.firstOrNull()?.id ?: "") }
+
+    // Dropdown states
+    val targetOptions = children.map { it.name } + listOf("🏰 Raid Familial", "🎯 Premier arrivé (Open Bounty)")
+    var selectedTargetText by remember { mutableStateOf(children.firstOrNull()?.name ?: "") }
+
+    val frequencyOptions = listOf("Quotidienne", "Hebdomadaire", "Ponctuelle")
+    var selectedFrequencyText by remember { mutableStateOf("Quotidienne") }
+
+    val validityOptions = listOf("1 jour", "7 jours", "15 jours", "30 jours", "Illimitée")
+    var selectedValidityText by remember { mutableStateOf("7 jours") }
+
+    var childForPayout by remember { mutableStateOf<User?>(null) }
+    var payoutAmountInput by remember { mutableStateOf("") }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Tableau de Bord Parent 🛡️") },
+                title = { Text("🛡️ $householdName (Mode Parent)") },
                 actions = {
+                    TextButton(onClick = onNavigateToSettings) {
+                        Text("Paramètres ⚙️")
+                    }
                     TextButton(onClick = onLogout) {
-                        Text("Changer de profil")
+                        Text("Changer")
                     }
                 }
             )
+        },
+        bottomBar = {
+            NavigationBar {
+                NavigationBarItem(
+                    selected = selectedTab == 0,
+                    onClick = { selectedTab = 0 },
+                    icon = { Text("📋") },
+                    label = { Text("Quêtes") }
+                )
+                NavigationBarItem(
+                    selected = selectedTab == 1,
+                    onClick = { selectedTab = 1 },
+                    icon = { Text("👥") },
+                    label = { Text("Enfants") }
+                )
+                NavigationBarItem(
+                    selected = selectedTab == 2,
+                    onClick = { selectedTab = 2 },
+                    icon = { Text("🎁") },
+                    label = { Text("Bons & Journal") }
+                )
+            }
         },
         floatingActionButton = {
             FloatingActionButton(onClick = { showAddDialog = true }) {
@@ -49,147 +100,168 @@ fun ParentDashboardScreen(
             }
         }
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp)
-        ) {
-            Text(
-                text = "Progression des Enfants",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(8.dp))
+        Box(modifier = Modifier.padding(padding)) {
+            when (selectedTab) {
+                0 -> ParentQuestsTab(
+                    users = users,
+                    quests = quests,
+                    onValidateQuest = onValidateQuest,
+                    onRequestRevision = onRequestRevision
+                )
+                1 -> ParentChildrenTab(
+                    users = users,
+                    onPayoutClick = { child ->
+                        childForPayout = child
+                        payoutAmountInput = "%.2f".format(child.pocketMoneyEuros).replace(",", ".")
+                    },
+                    onNavigateToProfiles = onNavigateToProfiles
+                )
+                2 -> ParentActivityTab(
+                    redeemedRewards = redeemedRewards,
+                    activityLog = activityLog,
+                    onFulfillReward = onFulfillReward,
+                    onConsumeReward = onConsumeReward
+                )
+            }
+        }
 
-            children.forEach { child ->
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column {
-                            Text(child.name, fontWeight = FontWeight.Bold)
-                            Text("Niveau ${child.level} • ${child.xp} XP", fontSize = 14.sp)
+        if (childForPayout != null) {
+            AlertDialog(
+                onDismissRequest = { childForPayout = null },
+                title = { Text("Verser de l'argent de poche 💶") },
+                text = {
+                    Column {
+                        Text("Enfant : ${childForPayout!!.name}")
+                        Text("Solde actuel de la cagnotte : %.2f €".format(childForPayout!!.pocketMoneyEuros))
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = payoutAmountInput,
+                            onValueChange = { payoutAmountInput = it },
+                            label = { Text("Montant à verser (€)") },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                },
+                confirmButton = {
+                    Button(onClick = {
+                        val amount = payoutAmountInput.replace(",", ".").toDoubleOrNull() ?: 0.0
+                        if (amount > 0.0) {
+                            onPayoutPocketMoney(childForPayout!!.id, amount)
+                            childForPayout = null
                         }
-                        Badge {
-                            Text("🪙 ${child.coins}")
-                        }
+                    }) {
+                        Text("Confirmer le versement")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { childForPayout = null }) {
+                        Text("Annuler")
                     }
                 }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-            Text(
-                text = "File de validation des Quêtes",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
             )
-            Spacer(modifier = Modifier.height(8.dp))
-
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(quests) { quest ->
-                    val assignee = users.find { it.id == quest.assigneeId }?.name ?: "Enfant"
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 6.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(quest.title, fontWeight = FontWeight.Bold)
-                                StatusBadge(quest.status)
-                            }
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text("Attribué à : $assignee • 🎁 ${quest.xpReward} XP / ${quest.coinReward} pièces", fontSize = 13.sp)
-
-                            if (quest.status == QuestStatus.COMPLETED) {
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.End
-                                ) {
-                                    OutlinedButton(
-                                        onClick = { onRequestRevision(quest.id) },
-                                        modifier = Modifier.padding(end = 8.dp)
-                                    ) {
-                                        Text("À refaire")
-                                    }
-                                    Button(
-                                        onClick = { onValidateQuest(quest.id) },
-                                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                                    ) {
-                                        Text("Valider ✔️")
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
         }
 
         if (showAddDialog) {
             AlertDialog(
                 onDismissRequest = { showAddDialog = false },
-                title = { Text("Nouvelle Quête") },
+                title = { Text("Nouvelle Quête / Raid") },
                 text = {
-                    Column {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
                         OutlinedTextField(
                             value = newTitle,
                             onValueChange = { newTitle = it },
-                            label = { Text("Intitulé de la tâche") },
+                            label = { Text("Intitulé de la quête") },
                             modifier = Modifier.fillMaxWidth()
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
                         OutlinedTextField(
                             value = newXp,
                             onValueChange = { newXp = it },
                             label = { Text("Récompense XP") },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             modifier = Modifier.fillMaxWidth()
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
                         OutlinedTextField(
                             value = newCoins,
                             onValueChange = { newCoins = it },
                             label = { Text("Récompense Pièces") },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             modifier = Modifier.fillMaxWidth()
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text("Attribuer à :", fontWeight = FontWeight.Medium)
-                        children.forEach { child ->
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                RadioButton(
-                                    selected = selectedChildId == child.id,
-                                    onClick = { selectedChildId = child.id }
-                                )
-                                Text(child.name)
-                            }
+
+                        // Target Dropdown
+                        ExposedDropdownMenuSelector(
+                            label = "Cible / Attribution",
+                            options = targetOptions,
+                            selectedOption = selectedTargetText,
+                            onOptionSelected = { selectedTargetText = it }
+                        )
+
+                        // Frequency Dropdown
+                        ExposedDropdownMenuSelector(
+                            label = "Fréquence",
+                            options = frequencyOptions,
+                            selectedOption = selectedFrequencyText,
+                            onOptionSelected = { selectedFrequencyText = it }
+                        )
+
+                        // Validity Dropdown (only if Ponctuelle)
+                        if (selectedFrequencyText == "Ponctuelle") {
+                            ExposedDropdownMenuSelector(
+                                label = "Durée de validité",
+                                options = validityOptions,
+                                selectedOption = selectedValidityText,
+                                onOptionSelected = { selectedValidityText = it }
+                            )
                         }
                     }
                 },
                 confirmButton = {
                     Button(onClick = {
                         if (newTitle.isNotBlank()) {
-                            onAddQuest(
-                                newTitle,
-                                newXp.toIntOrNull() ?: 15,
-                                newCoins.toIntOrNull() ?: 15,
-                                selectedChildId
-                            )
+                            val xp = newXp.toIntOrNull() ?: 25
+                            val coins = newCoins.toIntOrNull() ?: 25
+
+                            when {
+                                selectedTargetText.contains("Raid Familial") -> {
+                                    onAddRaid(newTitle, xp, coins)
+                                }
+                                selectedTargetText.contains("Premier arrivé") -> {
+                                    val freq = when (selectedFrequencyText) {
+                                        "Hebdomadaire" -> QuestFrequency.WEEKLY
+                                        "Ponctuelle" -> QuestFrequency.ONE_TIME
+                                        else -> QuestFrequency.DAILY
+                                    }
+                                    val days = when (selectedValidityText) {
+                                        "1 jour" -> 1
+                                        "7 jours" -> 7
+                                        "15 jours" -> 15
+                                        "30 jours" -> 30
+                                        else -> -1
+                                    }
+                                    onAddQuest(newTitle, xp, coins, "OPEN", freq, true, days)
+                                }
+                                else -> {
+                                    val matchedChild = children.find { it.name == selectedTargetText }
+                                    val childId = matchedChild?.id ?: (children.firstOrNull()?.id ?: "c1")
+                                    val freq = when (selectedFrequencyText) {
+                                        "Hebdomadaire" -> QuestFrequency.WEEKLY
+                                        "Ponctuelle" -> QuestFrequency.ONE_TIME
+                                        else -> QuestFrequency.DAILY
+                                    }
+                                    val days = when (selectedValidityText) {
+                                        "1 jour" -> 1
+                                        "7 jours" -> 7
+                                        "15 jours" -> 15
+                                        "30 jours" -> 30
+                                        else -> -1
+                                    }
+                                    onAddQuest(newTitle, xp, coins, childId, freq, false, days)
+                                }
+                            }
                             newTitle = ""
                             showAddDialog = false
                         }
@@ -207,13 +279,44 @@ fun ParentDashboardScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StatusBadge(status: QuestStatus) {
-    val (text, color) = when (status) {
-        QuestStatus.PENDING -> "En cours" to MaterialTheme.colorScheme.outline
-        QuestStatus.COMPLETED -> "À valider 📷" to MaterialTheme.colorScheme.tertiary
-        QuestStatus.VALIDATED -> "Validé ✅" to MaterialTheme.colorScheme.primary
-        QuestStatus.NEEDS_REVISION -> "À rectifier ⚠️" to MaterialTheme.colorScheme.error
+fun ExposedDropdownMenuSelector(
+    label: String,
+    options: List<String>,
+    selectedOption: String,
+    onOptionSelected: (String) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded },
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        OutlinedTextField(
+            value = selectedOption,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text(label) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier
+                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable, true)
+                .fillMaxWidth()
+        )
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            options.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(option) },
+                    onClick = {
+                        onOptionSelected(option)
+                        expanded = false
+                    }
+                )
+            }
+        }
     }
-    Text(text, fontSize = 12.sp, color = color, fontWeight = FontWeight.Bold)
 }
