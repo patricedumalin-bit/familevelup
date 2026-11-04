@@ -1,30 +1,89 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
-    android:viewportWidth="108"
-    android:viewportHeight="108">
-    <path android:pathData="M31,63.928c0,0 6.4,-11 12.1,-13.1c7.2,-2.6 26,-1.4 26,-1.4l38.1,38.1L107,108.928l-32,-1L31,63.928z">
-        <aapt:attr name="android:fillColor">
-            <gradient
-                android:endX="85.84757"
-                android:endY="92.4963"
-                android:startX="42.9492"
-                android:startY="49.59793"
-                android:type="linear">
-                <item
-                    android:color="#44000000"
-                    android:offset="0.0" />
-                <item
-                    android:color="#00000000"
-                    android:offset="1.0" />
-            </gradient>
-        </aapt:attr>
-    </path>
+    android:viewportWidth="400"
+    android:viewportHeight="400">
+
+    <!-- Background Gradient Circle -->
+    <path
+        android:fillColor="#8B5CF6"
+        android:pathData="M200,60 A140,140 0 1,1 200,340 A140,140 0 1,1 200,60 Z" />
+
+    <!-- Galaxy Sparkles (Aligned with FamiDocs / FamiMeals visual harmony) -->
+    <!-- Top-Right Prominent Sparkle -->
     <path
         android:fillColor="#FFFFFF"
-        android:fillType="nonZero"
-        android:pathData="M65.3,45.828l3.8,-6.6c0.2,-0.4 0.1,-0.9 -0.3,-1.1c-0.4,-0.2 -0.9,-0.1 -1.1,0.3l-3.9,6.7c-6.3,-2.8 -13.4,-2.8 -19.7,0l-3.9,-6.7c-0.2,-0.4 -0.7,-0.5 -1.1,-0.3C38.8,38.328 38.7,38.828 38.9,39.228l3.8,6.6C36.2,49.428 31.7,56.028 31,63.928h46C76.3,56.028 71.8,49.428 65.3,45.828zM43.4,57.328c-0.8,0 -1.5,-0.5 -1.8,-1.2c-0.3,-0.7 -0.1,-1.5 0.4,-2.1c0.5,-0.5 1.4,-0.7 2.1,-0.4c0.7,0.3 1.2,1 1.2,1.8C45.3,56.528 44.5,57.328 43.4,57.328L43.4,57.328zM64.6,57.328c-0.8,0 -1.5,-0.5 -1.8,-1.2s-0.1,-1.5 0.4,-2.1c0.5,-0.5 1.4,-0.7 2.1,-0.4c0.7,0.3 1.2,1 1.2,1.8C66.5,56.528 65.6,57.328 64.6,57.328L64.6,57.328z"
-        android:strokeWidth="1"
-        android:strokeColor="#00000000" />
+        android:pathData="M280,110 Q280,145 315,145 Q280,145 280,180 Q280,145 245,145 Q280,145 280,110 Z" />
+    <!-- Upper-Right Accent Sparkle -->
+    <path
+        android:fillColor="#E6FFFFFF"
+        android:pathData="M335,175 Q335,188 348,188 Q335,188 335,201 Q335,188 322,188 Q335,188 335,175 Z" />
+    <!-- Top-Left Subtle Sparkle -->
+    <path
+        android:fillColor="#B3FFFFFF"
+        android:pathData="M110,135 Q110,150 125,150 Q110,150 110,165 Q110,150 95,150 Q110,150 110,135 Z" />
+    <!-- Bottom-Left Balanced Sparkle -->
+    <path
+        android:fillColor="#D9FFFFFF"
+        android:pathData="M120,290 Q120,312 142,312 Q120,312 120,334 Q120,312 98,312 Q120,312 120,290 Z" />
+
+    <!-- House Roof -->
+    <path
+        android:fillColor="#7C3AED"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4"
+        android:pathData="M200,150 L260,200 L140,200 Z" />
+
+    <!-- House Body / Checklist Card -->
+    <path
+        android:fillColor="#F1F5F9"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.5"
+        android:pathData="M158,198 L242,198 A6,6 0 0,1 248,204 L248,264 A6,6 0 0,1 242,270 L158,270 A6,6 0 0,1 152,264 L152,204 A6,6 0 0,1 158,198 Z" />
+
+    <!-- Checklist Item 1 -->
+    <path
+        android:fillColor="#7C3AED"
+        android:pathData="M164,208 h10 v10 h-10 z" />
+    <path
+        android:fillColor="#64748B"
+        android:pathData="M180,211 h48 v4 h-48 z" />
+
+    <!-- Checklist Item 2 -->
+    <path
+        android:fillColor="#7C3AED"
+        android:pathData="M164,224 h10 v10 h-10 z" />
+    <path
+        android:fillColor="#64748B"
+        android:pathData="M180,227 h40 v4 h-40 z" />
+
+    <!-- Checklist Item 3 -->
+    <path
+        android:fillColor="#CBD5E1"
+        android:pathData="M164,240 h10 v10 h-10 z" />
+    <path
+        android:fillColor="#64748B"
+        android:pathData="M180,243 h32 v4 h-32 z" />
+
+    <!-- Star on top of Roof -->
+    <path
+        android:fillColor="#FBBF24"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:pathData="M200,112 L205,124 L218,126 L208,135 L211,147 L200,140 L189,147 L192,135 L182,126 L195,124 Z" />
+
+    <!-- Level-up Badge (Bottom Right) -->
+    <path
+        android:fillColor="#6D28D9"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4"
+        android:pathData="M236,230 A20,20 0 1,1 236,270 A20,20 0 1,1 236,230 Z" />
+    <!-- Up Arrows inside badge -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M228,255 L236,245 L244,255 M228,247 L236,237 L244,247"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
 </vector>

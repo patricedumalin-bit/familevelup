@@ -329,6 +329,17 @@ class FamilyViewModel : ViewModel() {
         logActivity("Profil mis à jour ✏️", "Profil modifié : $name")
     }
 
+    fun addReward(title: String, cost: Int, description: String) {
+        val newReward = Reward(
+            id = "r_${System.currentTimeMillis()}",
+            title = title,
+            cost = cost,
+            description = description
+        )
+        _rewards.update { it + newReward }
+        logActivity("Nouvelle Récompense 🎁", "Récompense ajoutée : $title ($cost pièces)")
+    }
+
     fun resetChildProgress(childId: String) {
         _users.update { usersList ->
             usersList.map { u ->

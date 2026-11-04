@@ -1,38 +1,44 @@
 package com.slydroidstudio.familevelup.ui.screens.child
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.slydroidstudio.familevelup.data.model.Achievement
 import com.slydroidstudio.familevelup.data.model.User
-import com.slydroidstudio.familevelup.ui.components.FullBodyAvatar
-import com.slydroidstudio.familevelup.ui.components.FullBodyConfig
+
+fun getHonoraryTitle(level: Int): String {
+    return when {
+        level >= 5 -> "Légende Vivante 🌟"
+        level == 4 -> "Seigneur des Tâches 👑"
+        level == 3 -> "Mage de l'Ordre 🧙‍♂️"
+        level == 2 -> "Chevalier du Foyer ⚔️"
+        else -> "Apprenti Héros 🛡️"
+    }
+}
 
 @Composable
 fun ChildProfileTab(
     child: User,
     onUpdateAvatarSkin: (String, String) -> Unit
 ) {
-    var showAvatarDialog by remember { mutableStateOf(false) }
+    var showEmojiDialog by remember { mutableStateOf(false) }
 
-    // Modular avatar configuration state
-    var selectedOutfit by remember { mutableStateOf("Hero") }
-    var selectedHeadgear by remember { mutableStateOf("Crown") }
-    var selectedHandItem by remember { mutableStateOf("Sword") }
-    var selectedColorIndex by remember { mutableStateOf(0) }
-
-    val outfits = listOf("Hero", "Knight", "Wizard", "Ninja", "Explorer")
-    val headgears = listOf("None", "Crown", "Wizard Hat", "Helmet", "Ninja Mask")
-    val handItems = listOf("None", "Sword", "Wand", "Shield")
-    val colors = listOf(Color(0xFF3F51B5), Color(0xFFE91E63), Color(0xFF4CAF50), Color(0xFFFF9800), Color(0xFF9C27B0), Color(0xFF00BCD4))
+    val emojis = listOf(
+        "🦸", "🧙", "⚔️", "🛡️", "🦁", "🐯",
+        "🚀", "🤖", "🦄", "👑", "🦊", "🐼",
+        "🐲", "👽", "🌟", "🔥", "⚡", "💎"
+    )
 
     val achievements = listOf(
         Achievement("a1", "Premier pas", "Gagne tes premiers XP", "🌟", child.xp > 0),
@@ -46,70 +52,77 @@ fun ChildProfileTab(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        // Character Sheet Card with Full-Body Modular Vector Avatar & Gear Icon
+        // Compact Character Sheet Card with XP Progress Bar
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
             ) {
                 Box(modifier = Modifier.fillMaxWidth()) {
-                    // Gear Icon Button to open Avatar Customization Modal
                     IconButton(
-                        onClick = { showAvatarDialog = true },
+                        onClick = { showEmojiDialog = true },
                         modifier = Modifier.align(Alignment.TopEnd)
                     ) {
-                        Text("⚙️", fontSize = 20.sp)
+                        Text("⚙️", fontSize = 18.sp)
                     }
 
                     Column(
                         modifier = Modifier
-                            .padding(20.dp)
-                            .fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                            .padding(16.dp)
+                            .fillMaxWidth()
                     ) {
-                        FullBodyAvatar(
-                            config = FullBodyConfig(
-                                outfit = selectedOutfit,
-                                headgear = selectedHeadgear,
-                                handItem = selectedHandItem,
-                                outfitColor = colors[selectedColorIndex]
-                            ),
-                            size = 130.dp
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text(child.name, fontSize = 24.sp, fontWeight = FontWeight.Bold)
-                        Text("Niveau ${child.level} • ${child.category.displayName}", fontSize = 14.sp, color = MaterialTheme.colorScheme.onPrimaryContainer)
-
-                        Spacer(modifier = Modifier.height(16.dp))
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceAround
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text("🔥 Série", fontSize = 12.sp)
-                                Text("${child.streakCount} jours", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                            // Compact Avatar Box
+                            Box(
+                                modifier = Modifier
+                                    .size(64.dp)
+                                    .clickable { showEmojiDialog = true },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(child.avatarSkin.ifBlank { "🦸" }, fontSize = 42.sp)
                             }
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text("🪙 Pièces", fontSize = 12.sp)
-                                Text("${child.coins}", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                            }
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text("🏦 Cagnotte", fontSize = 12.sp)
-                                Text("%.2f €".format(child.pocketMoneyEuros), fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.primary)
+
+                            Spacer(modifier = Modifier.width(16.dp))
+
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(child.name, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                                Text(getHonoraryTitle(child.level), fontSize = 13.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                                Text("${child.category.displayName}", fontSize = 12.sp, color = MaterialTheme.colorScheme.onPrimaryContainer)
+
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text("🔥 ${child.streakCount} j.", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                    Text("🪙 ${child.coins} p.", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                    Text("🏦 %.2f €".format(child.pocketMoneyEuros), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                                }
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
                         LinearProgressIndicator(
                             progress = { (child.xp % 100) / 100f },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(6.dp)
                         )
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text("${child.xp} XP total (${100 - (child.xp % 100)} XP avant niveau ${child.level + 1})", fontSize = 12.sp)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text("Niveau ${child.level}", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            Text("${child.xp} XP total (${100 - (child.xp % 100)} XP avant niv. ${child.level + 1})", fontSize = 11.sp, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                        }
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(20.dp))
             Text("Mes Trophées & Badges 🏆", fontSize = 18.sp, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(8.dp))
         }
@@ -123,93 +136,60 @@ fun ChildProfileTab(
             ) {
                 Row(
                     modifier = Modifier
-                        .padding(16.dp)
+                        .padding(12.dp)
                         .fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(ach.icon, fontSize = 28.sp, modifier = Modifier.padding(end = 16.dp))
+                    Text(ach.icon, fontSize = 24.sp, modifier = Modifier.padding(end = 12.dp))
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(ach.title, fontWeight = FontWeight.Bold)
-                        Text(ach.description, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(ach.title, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                        Text(ach.description, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     if (ach.isUnlocked) {
                         Badge {
-                            Text("Débloqué ✅")
+                            Text("Débloqué ✅", fontSize = 10.sp)
                         }
                     } else {
-                        Text("Verrouillé 🔒", fontSize = 12.sp, color = MaterialTheme.colorScheme.outline)
+                        Text("Verrouillé 🔒", fontSize = 11.sp, color = MaterialTheme.colorScheme.outline)
                     }
                 }
             }
         }
     }
 
-    if (showAvatarDialog) {
+    if (showEmojiDialog) {
         AlertDialog(
-            onDismissRequest = { showAvatarDialog = false },
-            title = { Text("Personnaliser mon Héros ⚙️") },
+            onDismissRequest = { showEmojiDialog = false },
+            title = { Text("Choisir mon Avatar Emojis ⭐") },
             text = {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text("Tenue :", fontWeight = FontWeight.Medium, fontSize = 13.sp)
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        outfits.forEach { o ->
+                Box(modifier = Modifier.height(200.dp)) {
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(4),
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(emojis) { emoji ->
                             Button(
-                                onClick = { selectedOutfit = o },
-                                colors = ButtonDefaults.buttonColors(containerColor = if (selectedOutfit == o) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant),
-                                contentPadding = PaddingValues(horizontal = 6.dp)
-                            ) {
-                                Text(o, fontSize = 11.sp)
-                            }
-                        }
-                    }
-
-                    Text("Couvre-chef :", fontWeight = FontWeight.Medium, fontSize = 13.sp)
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        headgears.forEach { h ->
-                            Button(
-                                onClick = { selectedHeadgear = h },
-                                colors = ButtonDefaults.buttonColors(containerColor = if (selectedHeadgear == h) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant),
-                                contentPadding = PaddingValues(horizontal = 4.dp)
-                            ) {
-                                Text(h, fontSize = 10.sp)
-                            }
-                        }
-                    }
-
-                    Text("Accessoire en main :", fontWeight = FontWeight.Medium, fontSize = 13.sp)
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        handItems.forEach { i ->
-                            Button(
-                                onClick = { selectedHandItem = i },
-                                colors = ButtonDefaults.buttonColors(containerColor = if (selectedHandItem == i) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant),
-                                contentPadding = PaddingValues(horizontal = 6.dp)
-                            ) {
-                                Text(i, fontSize = 11.sp)
-                            }
-                        }
-                    }
-
-                    Text("Couleur principale :", fontWeight = FontWeight.Medium, fontSize = 13.sp)
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        colors.forEachIndexed { idx, col ->
-                            Button(
-                                onClick = { selectedColorIndex = idx },
-                                colors = ButtonDefaults.buttonColors(containerColor = col),
-                                modifier = Modifier.size(36.dp),
+                                onClick = {
+                                    onUpdateAvatarSkin(child.id, emoji)
+                                    showEmojiDialog = false
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (child.avatarSkin == emoji) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
+                                ),
+                                modifier = Modifier.size(52.dp),
                                 contentPadding = PaddingValues(0.dp)
                             ) {
-                                if (selectedColorIndex == idx) Text("✓", color = Color.White)
+                                Text(emoji, fontSize = 24.sp)
                             }
                         }
                     }
                 }
             },
             confirmButton = {
-                Button(onClick = { showAvatarDialog = false }) {
-                    Text("Valider")
+                Button(onClick = { showEmojiDialog = false }) {
+                    Text("Fermer")
                 }
             }
         )
