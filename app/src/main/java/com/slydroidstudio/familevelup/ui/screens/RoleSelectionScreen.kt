@@ -1,6 +1,7 @@
 package com.slydroidstudio.familevelup.ui.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -50,6 +51,9 @@ fun RoleSelectionScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             users.forEach { user ->
+                val firstName = user.name.substringBefore("(").trim()
+                val icon = user.avatarSkin.ifBlank { if (user.role == UserRole.PARENT) "🛡️" else "⚔️" }
+
                 Button(
                     onClick = {
                         if (user.role == UserRole.PARENT) {
@@ -66,13 +70,22 @@ fun RoleSelectionScreen(
                             MaterialTheme.colorScheme.secondaryContainer
                         else
                             MaterialTheme.colorScheme.primaryContainer
-                    )
+                    ),
+                    shape = RoundedCornerShape(16.dp)
                 ) {
-                    Text(
-                        text = if (user.role == UserRole.PARENT) "🛡️ ${user.name} (Mode Parent - Biométrique)" else "⚔️ ${user.name} (Niveau ${user.level})",
-                        fontSize = 16.sp,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    Row(
+                        modifier = Modifier.padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(icon, fontSize = 24.sp)
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = firstName,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
                 }
             }
         }

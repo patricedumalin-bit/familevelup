@@ -29,6 +29,8 @@ data class User(
     val avatarSkin: String = "default_avatar",
     val streakCount: Int = 0,
     val pocketMoneyEuros: Double = 0.0,
+    val candyCount: Int = 0,
+    val rewardChoice: String = "MONEY", // "MONEY" or "CANDY"
     val category: UserCategory = UserCategory.CHILD_6_10,
     val rewardMultiplier: Float = 1.0f
 )

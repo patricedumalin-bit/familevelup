@@ -3,7 +3,10 @@ package com.slydroidstudio.familevelup.ui.screens.child
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.slydroidstudio.familevelup.data.model.Quest
 import com.slydroidstudio.familevelup.data.model.RedeemedReward
 import com.slydroidstudio.familevelup.data.model.Reward
@@ -22,12 +25,18 @@ fun ChildDashboardScreen(
     onUpdateAvatarSkin: (String, String) -> Unit,
     onLogout: () -> Unit
 ) {
-    var selectedTab by remember { mutableStateOf(0) }
+    var selectedTab by remember { mutableStateOf(0) } // Default tab 0 is Quests
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("${child.avatarSkin} FamiLevelUp - ${child.name}") },
+                title = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("🏰", fontSize = 20.sp)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("FamiLevelUp")
+                    }
+                },
                 actions = {
                     TextButton(onClick = onLogout) {
                         Text("Changer")
@@ -40,14 +49,14 @@ fun ChildDashboardScreen(
                 NavigationBarItem(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
-                    icon = { Text("🛡️") },
-                    label = { Text("Profil") }
+                    icon = { Text("⚔️") },
+                    label = { Text("Quêtes") }
                 )
                 NavigationBarItem(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
-                    icon = { Text("⚔️") },
-                    label = { Text("Quêtes") }
+                    icon = { Text("🛡️") },
+                    label = { Text("Profil") }
                 )
                 NavigationBarItem(
                     selected = selectedTab == 2,
@@ -60,8 +69,8 @@ fun ChildDashboardScreen(
     ) { padding ->
         Box(modifier = Modifier.padding(padding)) {
             when (selectedTab) {
-                0 -> ChildProfileTab(child = child, onUpdateAvatarSkin = onUpdateAvatarSkin)
-                1 -> ChildQuestsTab(child = child, quests = quests, onCompleteQuest = onCompleteQuest, onClaimOpenBounty = onClaimOpenBounty)
+                0 -> ChildQuestsTab(child = child, quests = quests, onCompleteQuest = onCompleteQuest, onClaimOpenBounty = onClaimOpenBounty)
+                1 -> ChildProfileTab(child = child, onUpdateAvatarSkin = onUpdateAvatarSkin)
                 2 -> ChildShopTab(child = child, rewards = rewards, redeemedRewards = redeemedRewards, onBuyReward = onBuyReward)
             }
         }

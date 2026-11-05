@@ -15,15 +15,15 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import kotlin.math.ceil
 
 class FamilyViewModel : ViewModel() {
 
     private val _users = MutableStateFlow(
         listOf(
-            User(id = "p1", name = "Papa / Maman", role = UserRole.PARENT, category = UserCategory.ADULT),
-            User(id = "c1", name = "Caleb (6 ans)", role = UserRole.CHILD, xp = 20, level = 1, coins = 10, avatarSkin = "🛡️", category = UserCategory.CHILD_6_10, rewardMultiplier = 1.0f),
-            User(id = "c2", name = "Luna (6 ans)", role = UserRole.CHILD, xp = 20, level = 1, coins = 10, avatarSkin = "🦄", category = UserCategory.CHILD_6_10, rewardMultiplier = 1.0f)
+            User(id = "p1", name = "Patrice", role = UserRole.PARENT, category = UserCategory.ADULT, avatarSkin = "🛡️"),
+            User(id = "p2", name = "Diane", role = UserRole.PARENT, category = UserCategory.ADULT, avatarSkin = "👑"),
+            User(id = "c1", name = "Caleb (6 ans)", role = UserRole.CHILD, xp = 30, level = 1, coins = 25, avatarSkin = "🦸", category = UserCategory.CHILD_6_10, rewardMultiplier = 1.0f, rewardChoice = "CANDY"),
+            User(id = "c2", name = "Luna (6 ans)", role = UserRole.CHILD, xp = 30, level = 1, coins = 25, avatarSkin = "🦄", category = UserCategory.CHILD_6_10, rewardMultiplier = 1.0f, rewardChoice = "MONEY")
         )
     )
     val users: StateFlow<List<User>> = _users.asStateFlow()
@@ -33,9 +33,27 @@ class FamilyViewModel : ViewModel() {
 
     private val _quests = MutableStateFlow(
         listOf(
-            Quest(id = "q1", title = "Ranger ses jouets", xpReward = 15, coinReward = 15, assigneeId = "c1", status = QuestStatus.PENDING, frequency = QuestFrequency.DAILY),
-            Quest(id = "q2", title = "Mettre la table", xpReward = 20, coinReward = 20, assigneeId = "c2", status = QuestStatus.PENDING, frequency = QuestFrequency.DAILY),
-            Quest(id = "raid_1", title = "🏰 Raid : Nettoyage du salon", xpReward = 50, coinReward = 50, assigneeId = "FAMILY", status = QuestStatus.PENDING, isRaid = true)
+            // Parents' Quests
+            Quest(id = "q_p1_1", title = "Préparer le dîner de la semaine", xpReward = 50, coinReward = 50, assigneeId = "p1", status = QuestStatus.PENDING, frequency = QuestFrequency.WEEKLY, validityDays = 7),
+            Quest(id = "q_p2_1", title = "Organiser la sortie du week-end", xpReward = 50, coinReward = 50, assigneeId = "p2", status = QuestStatus.PENDING, frequency = QuestFrequency.WEEKLY, validityDays = 7),
+
+            // Caleb's Quests
+            Quest(id = "q_c1_1", title = "Ranger ses jouets", xpReward = 15, coinReward = 15, assigneeId = "c1", status = QuestStatus.PENDING, frequency = QuestFrequency.DAILY, validityDays = 1),
+            Quest(id = "q_c1_2", title = "Faire son lit", xpReward = 20, coinReward = 20, assigneeId = "c1", status = QuestStatus.PENDING, frequency = QuestFrequency.DAILY, validityDays = 1),
+            Quest(id = "q_c1_3", title = "Se brosser les dents", xpReward = 10, coinReward = 10, assigneeId = "c1", status = QuestStatus.PENDING, frequency = QuestFrequency.DAILY, validityDays = 1),
+            Quest(id = "q_c1_4", title = "S'habiller tout seul", xpReward = 15, coinReward = 15, assigneeId = "c1", status = QuestStatus.PENDING, frequency = QuestFrequency.DAILY, validityDays = 1),
+            Quest(id = "q_c1_5", title = "Préparer son cartable", xpReward = 25, coinReward = 25, assigneeId = "c1", status = QuestStatus.PENDING, frequency = QuestFrequency.WEEKLY, validityDays = 7),
+
+            // Luna's Quests
+            Quest(id = "q_c2_1", title = "Ranger ses jouets", xpReward = 15, coinReward = 15, assigneeId = "c2", status = QuestStatus.PENDING, frequency = QuestFrequency.DAILY, validityDays = 1),
+            Quest(id = "q_c2_2", title = "Mettre la table", xpReward = 20, coinReward = 20, assigneeId = "c2", status = QuestStatus.PENDING, frequency = QuestFrequency.DAILY, validityDays = 1),
+            Quest(id = "q_c2_3", title = "Se brosser les dents", xpReward = 10, coinReward = 10, assigneeId = "c2", status = QuestStatus.PENDING, frequency = QuestFrequency.DAILY, validityDays = 1),
+            Quest(id = "q_c2_4", title = "Arroser les plantes", xpReward = 20, coinReward = 20, assigneeId = "c2", status = QuestStatus.PENDING, frequency = QuestFrequency.WEEKLY, validityDays = 7),
+            Quest(id = "q_c2_5", title = "Lire un livre", xpReward = 15, coinReward = 15, assigneeId = "c2", status = QuestStatus.PENDING, frequency = QuestFrequency.DAILY, validityDays = 1),
+
+            // Shared / Family Quests & Raids
+            Quest(id = "q_shared_1", title = "Cuisiner en famille", xpReward = 40, coinReward = 40, assigneeId = "OPEN", status = QuestStatus.PENDING, isOpenBounty = true, validityDays = 3),
+            Quest(id = "raid_weekend", title = "🏰 Raid : Nettoyage de la chambre & du salon", xpReward = 80, coinReward = 80, assigneeId = "FAMILY", status = QuestStatus.PENDING, isRaid = true, validityDays = 2)
         )
     )
     val quests: StateFlow<List<Quest>> = _quests.asStateFlow()
@@ -44,7 +62,8 @@ class FamilyViewModel : ViewModel() {
         listOf(
             Reward(id = "r1", title = "30 min de dessin animé", cost = 40, description = "Regarde ton dessin animé préféré."),
             Reward(id = "r2", title = "Choisir le dessert", cost = 60, description = "Choisis le dessert du soir !"),
-            Reward(id = "r3", title = "Argent de poche (2€)", cost = 100, description = "Convertis tes pièces en vrai argent de poche.")
+            Reward(id = "r3", title = "Argent de poche (2€)", cost = 100, description = "Convertis tes pièces en vrai argent de poche."),
+            Reward(id = "r_candy", title = "Bonbon magique 🍬 (2€)", cost = 100, description = "Convertis tes pièces en bonbon (1 bonbon = 2€).")
         )
     )
     val rewards: StateFlow<List<Reward>> = _rewards.asStateFlow()
@@ -54,7 +73,7 @@ class FamilyViewModel : ViewModel() {
 
     private val _activityLog = MutableStateFlow<List<ActivityLogItem>>(
         listOf(
-            ActivityLogItem(id = "log_1", title = "Famille Dumalin 🏰", description = "Bienvenue dans FamiLevelUp !")
+            ActivityLogItem(id = "log_1", title = "Famille Dumalin 🏰", description = "Planning de la semaine initialisé pour Patrice, Diane, Caleb & Luna !")
         )
     )
     val activityLog: StateFlow<List<ActivityLogItem>> = _activityLog.asStateFlow()
@@ -95,21 +114,41 @@ class FamilyViewModel : ViewModel() {
             createdAt = System.currentTimeMillis()
         )
         _quests.update { it + newQuest }
-        logActivity("Nouvelle quête 📜", "Tâche créée : $title (Validité : ${if (calculatedValidity == -1) "Illimitée" else "$calculatedValidity j"})")
+        logActivity("Nouvelle quête 📜", "Tâche créée : $title")
+    }
+
+    fun deleteQuest(questId: String) {
+        val quest = _quests.value.find { it.id == questId }
+        _quests.update { list -> list.filter { it.id != questId } }
+        if (quest != null) {
+            logActivity("Quête supprimée 🗑️", "Quête supprimée : ${quest.title}")
+        }
+    }
+
+    fun updateQuest(questId: String, title: String, xp: Int, coins: Int) {
+        _quests.update { list ->
+            list.map { q ->
+                if (q.id == questId) q.copy(title = title, xpReward = xp, coinReward = coins) else q
+            }
+        }
+        logActivity("Quête modifiée ✏️", "Quête mise à jour : $title")
     }
 
     fun addRaid(title: String, xp: Int, coins: Int) {
         val newRaid = Quest(
             id = "raid_${System.currentTimeMillis()}",
-            title = title,
+            title = "🏰 Raid : $title",
             xpReward = xp,
             coinReward = coins,
             assigneeId = "FAMILY",
             status = QuestStatus.PENDING,
-            isRaid = true
+            isRaid = true,
+            frequency = QuestFrequency.WEEKLY,
+            validityDays = 2,
+            createdAt = System.currentTimeMillis()
         )
         _quests.update { it + newRaid }
-        logActivity("Nouveau Raid 🏰", "Raid familial créé : $title")
+        logActivity("Nouveau Raid Familial 🏰", "Raid créé : $title")
     }
 
     fun claimOpenBounty(questId: String, childId: String) {
@@ -141,9 +180,8 @@ class FamilyViewModel : ViewModel() {
 
     fun validateQuest(questId: String) {
         val quest = _quests.value.find { it.id == questId } ?: return
-        if (quest.status == QuestStatus.COMPLETED) {
+        if (quest.status == QuestStatus.COMPLETED || quest.status == QuestStatus.PENDING) {
             if (quest.isRaid) {
-                // Reward ALL children/members except adults for family raid
                 _users.update { usersList ->
                     usersList.map { u ->
                         if (u.role == UserRole.CHILD && u.category != UserCategory.ADULT) {
@@ -158,37 +196,38 @@ class FamilyViewModel : ViewModel() {
                 }
                 logActivity("Raid validé ✅", "Le raid '${quest.title}' a été validé pour la famille !")
             } else {
-                // Reward specific assignee & increment streak (if not adult)
-                val isAssignedPersonal = !quest.isRaid && !quest.isOpenBounty && quest.assigneeId != "OPEN" && quest.assigneeId != "FAMILY"
-                val isExpired = isAssignedPersonal && quest.validityDays != -1 && (System.currentTimeMillis() - quest.createdAt > quest.validityDays * 24 * 60 * 60 * 1000L)
-                val penalty = if (isExpired) ceil(quest.coinReward * 0.10).toInt() else 0
-
                 val assignee = _users.value.find { it.id == quest.assigneeId }
                 _users.update { usersList ->
                     usersList.map { u ->
                         if (u.id == quest.assigneeId) {
                             if (u.category == UserCategory.ADULT) {
-                                u
+                                u.copy(xp = u.xp + quest.xpReward)
                             } else {
                                 val rewardedXp = (quest.xpReward * u.rewardMultiplier).toInt()
                                 val rewardedCoins = (quest.coinReward * u.rewardMultiplier).toInt()
                                 val newStreak = u.streakCount + 1
                                 val streakBonusCoins = if (newStreak % 3 == 0) 15 else 0
                                 val newXp = u.xp + rewardedXp
-                                val newCoins = (u.coins + rewardedCoins + streakBonusCoins - penalty).coerceAtLeast(0)
+                                val newCoins = (u.coins + rewardedCoins + streakBonusCoins).coerceAtLeast(0)
                                 val newLevel = 1 + (newXp / 100)
-                                u.copy(xp = newXp, level = newLevel, coins = newCoins, streakCount = newStreak)
+                                val newPocketMoney = if (u.rewardChoice == "MONEY" && newCoins >= 100) {
+                                    u.pocketMoneyEuros + 2.0
+                                } else {
+                                    u.pocketMoneyEuros
+                                }
+                                val finalCoins = if (u.rewardChoice == "MONEY" && newCoins >= 100) newCoins - 100 else newCoins
+                                u.copy(
+                                    xp = newXp,
+                                    level = newLevel,
+                                    coins = finalCoins,
+                                    streakCount = newStreak,
+                                    pocketMoneyEuros = newPocketMoney
+                                )
                             }
                         } else u
                     }
                 }
-                if (assignee != null) {
-                    if (isExpired && penalty > 0) {
-                        logActivity("Malus appliqué ⚠️", "'${quest.title}' validée en retard pour ${assignee.name} (-$penalty pièces de malus)")
-                    } else {
-                        logActivity("Quête validée ✅", "'${quest.title}' validée pour ${assignee.name}")
-                    }
-                }
+                logActivity("Quête validée ✅", "Quête '${quest.title}' validée pour ${assignee?.name ?: "le membre"}")
             }
             _quests.update { list ->
                 list.map { q ->
@@ -199,39 +238,20 @@ class FamilyViewModel : ViewModel() {
     }
 
     fun requestRevision(questId: String) {
-        val quest = _quests.value.find { it.id == questId }
         _quests.update { list ->
             list.map { q ->
                 if (q.id == questId) q.copy(status = QuestStatus.NEEDS_REVISION) else q
             }
         }
-        if (quest != null) {
-            logActivity("Retouche demandée ⚠️", "Quête à refaire : ${quest.title}")
-        }
+        logActivity("À rectifier ⚠️", "Le parent a demandé une correction sur une quête.")
     }
 
     fun buyReward(userId: String, reward: Reward) {
         val user = _users.value.find { it.id == userId } ?: return
         if (user.coins >= reward.cost) {
-            val isPocketMoney = reward.id == "r3" || reward.title.contains("Argent de poche", ignoreCase = true)
-            val euroAdd = if (isPocketMoney) 2.0 else 0.0
-
             _users.update { usersList ->
                 usersList.map { u ->
-                    if (u.id == userId) {
-                        u.copy(
-                            coins = u.coins - reward.cost,
-                            pocketMoneyEuros = u.pocketMoneyEuros + euroAdd
-                        )
-                    } else u
-                }
-            }
-            if (_currentUser.value?.id == userId) {
-                _currentUser.update { 
-                    it?.copy(
-                        coins = it.coins - reward.cost,
-                        pocketMoneyEuros = it.pocketMoneyEuros + euroAdd
-                    ) 
+                    if (u.id == userId) u.copy(coins = u.coins - reward.cost) else u
                 }
             }
             val coupon = RedeemedReward(
@@ -255,18 +275,15 @@ class FamilyViewModel : ViewModel() {
             }
         }
         if (coupon != null) {
-            logActivity("Bon délivré 🎟️", "Le bon '${coupon.rewardTitle}' a été délivré à ${coupon.childName}")
+            logActivity("Récompense délivrée 🎟️", "Bon validé pour ${coupon.childName} : ${coupon.rewardTitle}")
         }
     }
 
     fun consumeReward(couponId: String) {
-        val coupon = _redeemedRewards.value.find { it.id == couponId }
         _redeemedRewards.update { list ->
             list.filter { it.id != couponId }
         }
-        if (coupon != null) {
-            logActivity("Bon consommé 🗑️", "Le bon '${coupon.rewardTitle}' a été utilisé par ${coupon.childName}")
-        }
+        logActivity("Récompense consommée ✅", "Bon utilisé.")
     }
 
     fun updateAvatarSkin(userId: String, skin: String) {
@@ -299,13 +316,14 @@ class FamilyViewModel : ViewModel() {
         }
     }
 
-    fun addUser(name: String, role: UserRole, category: UserCategory, multiplier: Float) {
+    fun addUser(name: String, role: UserRole, category: UserCategory, multiplier: Float, rewardChoice: String = "MONEY") {
         val newUser = User(
             id = "u_${System.currentTimeMillis()}",
             name = name,
             role = role,
             category = category,
             rewardMultiplier = multiplier,
+            rewardChoice = rewardChoice,
             avatarSkin = if (role == UserRole.PARENT || category == UserCategory.ADULT) "🛡️" else "⚔️"
         )
         _users.update { it + newUser }
@@ -320,10 +338,10 @@ class FamilyViewModel : ViewModel() {
         }
     }
 
-    fun updateUserProfile(userId: String, name: String, category: UserCategory, multiplier: Float) {
+    fun updateUserProfile(userId: String, name: String, category: UserCategory, multiplier: Float, rewardChoice: String = "MONEY") {
         _users.update { usersList ->
             usersList.map { u ->
-                if (u.id == userId) u.copy(name = name, category = category, rewardMultiplier = multiplier) else u
+                if (u.id == userId) u.copy(name = name, category = category, rewardMultiplier = multiplier, rewardChoice = rewardChoice) else u
             }
         }
         logActivity("Profil mis à jour ✏️", "Profil modifié : $name")

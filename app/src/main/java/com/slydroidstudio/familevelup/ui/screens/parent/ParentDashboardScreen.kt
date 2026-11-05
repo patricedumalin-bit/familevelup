@@ -30,6 +30,8 @@ fun ParentDashboardScreen(
     onAddRaid: (String, Int, Int) -> Unit,
     onValidateQuest: (String) -> Unit,
     onRequestRevision: (String) -> Unit,
+    onDeleteQuest: (String) -> Unit,
+    onUpdateQuest: (String, String, Int, Int) -> Unit,
     onFulfillReward: (String) -> Unit,
     onConsumeReward: (String) -> Unit,
     onPayoutPocketMoney: (String, Double) -> Unit,
@@ -61,7 +63,13 @@ fun ParentDashboardScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("🛡️ $householdName (Mode Parent)") },
+                title = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("🏰", fontSize = 20.sp)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("FamiLevelUp")
+                    }
+                },
                 actions = {
                     TextButton(onClick = onNavigateToSettings) {
                         Text("Paramètres ⚙️")
@@ -106,7 +114,9 @@ fun ParentDashboardScreen(
                     users = users,
                     quests = quests,
                     onValidateQuest = onValidateQuest,
-                    onRequestRevision = onRequestRevision
+                    onRequestRevision = onRequestRevision,
+                    onDeleteQuest = onDeleteQuest,
+                    onUpdateQuest = onUpdateQuest
                 )
                 1 -> ParentChildrenTab(
                     users = users,

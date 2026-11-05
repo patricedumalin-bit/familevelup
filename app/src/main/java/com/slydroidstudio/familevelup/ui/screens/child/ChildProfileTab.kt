@@ -11,7 +11,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.slydroidstudio.familevelup.data.model.Achievement
@@ -33,6 +35,7 @@ fun ChildProfileTab(
     onUpdateAvatarSkin: (String, String) -> Unit
 ) {
     var showEmojiDialog by remember { mutableStateOf(false) }
+    var selectedAchievement by remember { mutableStateOf<Achievement?>(null) }
 
     val emojis = listOf(
         "🦸", "🧙", "⚔️", "🛡️", "🦁", "🐯",
@@ -41,10 +44,11 @@ fun ChildProfileTab(
     )
 
     val achievements = listOf(
-        Achievement("a1", "Premier pas", "Gagne tes premiers XP", "🌟", child.xp > 0),
-        Achievement("a2", "Série de feu", "Atteins 3 jours de streak", "🔥", child.streakCount >= 3),
-        Achievement("a3", "Économe", "Possède 50 pièces ou plus", "🪙", child.coins >= 50),
-        Achievement("a4", "Héros du foyer", "Atteins le niveau 2 ou plus", "🧙‍♂️", child.level >= 2)
+        Achievement("a1", "Premier pas", "Gagne tes premiers XP en accomplissant une quête.", "🌟", child.xp > 0),
+        Achievement("a2", "Série de feu", "Atteins 3 jours de streak consécutifs.", "🔥", child.streakCount >= 3),
+        Achievement("a3", "Économe", "Amasse 50 pièces d'or ou plus dans ta bourse.", "🪙", child.coins >= 50),
+        Achievement("a4", "Héros du foyer", "Atteins le niveau 2 ou plus en cumulant de l'XP.", "🧙‍♂️", child.level >= 2),
+        Achievement("a5", "Maître du rangement", "Valide 5 quêtes de maison.", "🧹", child.xp >= 100)
     )
 
     LazyColumn(
@@ -52,7 +56,7 @@ fun ChildProfileTab(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        // Compact Character Sheet Card with XP Progress Bar
+        // Compact Character Sheet Card
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -75,7 +79,6 @@ fun ChildProfileTab(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            // Compact Avatar Box
                             Box(
                                 modifier = Modifier
                                     .size(64.dp)
@@ -90,7 +93,7 @@ fun ChildProfileTab(
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(child.name, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                                 Text(getHonoraryTitle(child.level), fontSize = 13.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                                Text("${child.category.displayName}", fontSize = 12.sp, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                                Text(child.category.displayName, fontSize = 12.sp, color = MaterialTheme.colorScheme.onPrimaryContainer)
 
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Row(
@@ -99,7 +102,11 @@ fun ChildProfileTab(
                                 ) {
                                     Text("🔥 ${child.streakCount} j.", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                                     Text("🪙 ${child.coins} p.", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                                    Text("🏦 %.2f €".format(child.pocketMoneyEuros), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                                    if (child.rewardChoice == "CANDY") {
+                                        Text("🍬 Bonbons", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                                    } else {
+                                        Text("🏦 %.2f €".format(child.pocketMoneyEuros), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                                    }
                                 }
                             }
                         }
@@ -124,15 +131,20 @@ fun ChildProfileTab(
             }
             Spacer(modifier = Modifier.height(20.dp))
             Text("Mes Trophées & Badges 🏆", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
         }
 
         items(achievements) { ach ->
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 4.dp),
-                colors = if (ach.isUnlocked) CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer) else CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                    .padding(vertical = 4.dp)
+                    .clickable { selectedAchievement = ach },
+                colors = if (ach.isUnlocked) {
+                    CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+                } else {
+                    CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                }
             ) {
                 Row(
                     modifier = Modifier
@@ -140,21 +152,81 @@ fun ChildProfileTab(
                         .fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(ach.icon, fontSize = 24.sp, modifier = Modifier.padding(end = 12.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(ach.title, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                        Text(ach.description, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    // Grayed out if locked, bright if unlocked
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .alpha(if (ach.isUnlocked) 1.0f else 0.4f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(ach.icon, fontSize = 28.sp)
                     }
-                    if (ach.isUnlocked) {
-                        Badge {
-                            Text("Débloqué ✅", fontSize = 10.sp)
-                        }
-                    } else {
-                        Text("Verrouillé 🔒", fontSize = 11.sp, color = MaterialTheme.colorScheme.outline)
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            ach.title,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp,
+                            color = if (ach.isUnlocked) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            if (ach.isUnlocked) "Débloqué ✅" else "Verrouillé 🔒 (Clique pour voir)",
+                            fontSize = 11.sp,
+                            color = if (ach.isUnlocked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+                        )
                     }
                 }
             }
         }
+    }
+
+    // Popup Detail Dialog for clicked Achievement / Trophy
+    if (selectedAchievement != null) {
+        val ach = selectedAchievement!!
+        AlertDialog(
+            onDismissRequest = { selectedAchievement = null },
+            title = {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(ach.icon, fontSize = 56.sp)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(ach.title, fontWeight = FontWeight.Bold, fontSize = 20.sp, textAlign = TextAlign.Center)
+                }
+            },
+            text = {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        if (ach.isUnlocked) "Statut : Débloqué avec succès ! 🎉" else "Statut : Verrouillé 🔒",
+                        fontWeight = FontWeight.Bold,
+                        color = if (ach.isUnlocked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                        fontSize = 13.sp
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        "Condition d'obtention :\n${ach.description}",
+                        fontSize = 14.sp,
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = { selectedAchievement = null },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Fermer")
+                }
+            }
+        )
     }
 
     if (showEmojiDialog) {

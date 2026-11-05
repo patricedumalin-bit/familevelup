@@ -128,9 +128,9 @@ class MainActivity : FragmentActivity() {
                                 "profiles" -> {
                                     ProfileManagementScreen(
                                         users = users,
-                                        onAddUser = { name, role, category, mult -> viewModel.addUser(name, role, category, mult) },
+                                        onAddUser = { name, role, category, mult, choice -> viewModel.addUser(name, role, category, mult, choice) },
                                         onDeleteUser = { id -> viewModel.deleteUser(id) },
-                                        onUpdateProfile = { id, name, cat, mult -> viewModel.updateUserProfile(id, name, cat, mult) },
+                                        onUpdateProfile = { id, name, cat, mult, choice -> viewModel.updateUserProfile(id, name, cat, mult, choice) },
                                         onResetProgress = { id -> viewModel.resetChildProgress(id) },
                                         onBack = { parentScreen = "settings" }
                                     )
@@ -150,6 +150,8 @@ class MainActivity : FragmentActivity() {
                                         },
                                         onValidateQuest = { questId -> viewModel.validateQuest(questId) },
                                         onRequestRevision = { questId -> viewModel.requestRevision(questId) },
+                                        onDeleteQuest = { questId -> viewModel.deleteQuest(questId) },
+                                        onUpdateQuest = { questId, title, xp, coins -> viewModel.updateQuest(questId, title, xp, coins) },
                                         onFulfillReward = { couponId -> viewModel.fulfillReward(couponId) },
                                         onConsumeReward = { couponId -> viewModel.consumeReward(couponId) },
                                         onPayoutPocketMoney = { childId, amount -> viewModel.payoutPocketMoney(childId, amount) },

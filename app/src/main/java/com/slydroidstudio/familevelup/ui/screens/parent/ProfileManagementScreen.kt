@@ -18,9 +18,9 @@ import com.slydroidstudio.familevelup.data.model.UserRole
 @Composable
 fun ProfileManagementScreen(
     users: List<User>,
-    onAddUser: (String, UserRole, UserCategory, Float) -> Unit,
+    onAddUser: (String, UserRole, UserCategory, Float, String) -> Unit,
     onDeleteUser: (String) -> Unit,
-    onUpdateProfile: (String, String, UserCategory, Float) -> Unit,
+    onUpdateProfile: (String, String, UserCategory, Float, String) -> Unit,
     onResetProgress: (String) -> Unit,
     onBack: () -> Unit
 ) {
@@ -32,6 +32,7 @@ fun ProfileManagementScreen(
     var nameInput by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf(UserCategory.CHILD_6_10) }
     var multiplierInput by remember { mutableStateOf("1.0") }
+    var rewardChoiceInput by remember { mutableStateOf("MONEY") }
 
     Scaffold(
         topBar = {
@@ -49,6 +50,7 @@ fun ProfileManagementScreen(
                 nameInput = ""
                 selectedCategory = UserCategory.CHILD_6_10
                 multiplierInput = "1.0"
+                rewardChoiceInput = "MONEY"
                 showAddDialog = true
             }) {
                 Text("+", fontSize = 24.sp)
@@ -84,7 +86,8 @@ fun ProfileManagementScreen(
                             Text("${user.avatarSkin} ${user.name}", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                             Text("Rôle : ${user.role.name} • Catégorie : ${user.category.displayName}", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             if (user.category != UserCategory.ADULT) {
-                                Text("Multiplicateur : ${user.rewardMultiplier}x • Niveau ${user.level} • 🪙 ${user.coins} pièces", fontSize = 13.sp)
+                                val rewardTypeDesc = if (user.rewardChoice == "CANDY") "🍬 Bonbons" else "💶 Argent de poche"
+                                Text("Récompense : $rewardTypeDesc • ${user.rewardMultiplier}x • Niv. ${user.level} • 🪙 ${user.coins} p.", fontSize = 12.sp)
                             } else {
                                 Text("Participant (Sans gain d'XP/pièces)", fontSize = 12.sp, color = MaterialTheme.colorScheme.secondary)
                             }
@@ -96,6 +99,7 @@ fun ProfileManagementScreen(
                                     nameInput = user.name
                                     selectedCategory = user.category
                                     multiplierInput = user.rewardMultiplier.toString()
+                                    rewardChoiceInput = user.rewardChoice
                                 }) {
                                     Text("Modifier ✏️")
                                 }
@@ -156,6 +160,26 @@ fun ProfileManagementScreen(
                                 label = { Text("Multiplicateur de récompense (ex: 1.0, 1.5)") },
                                 modifier = Modifier.fillMaxWidth()
                             )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text("Type de récompense (pour les plus jeunes) :", fontWeight = FontWeight.Medium)
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Button(
+                                    onClick = { rewardChoiceInput = "MONEY" },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = if (rewardChoiceInput != "CANDY") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
+                                    )
+                                ) {
+                                    Text("💶 Argent")
+                                }
+                                Button(
+                                    onClick = { rewardChoiceInput = "CANDY" },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = if (rewardChoiceInput == "CANDY") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
+                                    )
+                                ) {
+                                    Text("🍬 Bonbon (2€=1)")
+                                }
+                            }
                         }
                     }
                 },
@@ -164,7 +188,7 @@ fun ProfileManagementScreen(
                         if (nameInput.isNotBlank()) {
                             val mult = multiplierInput.replace(",", ".").toFloatOrNull() ?: 1.0f
                             val role = if (selectedCategory == UserCategory.ADULT) UserRole.PARENT else UserRole.CHILD
-                            onAddUser(nameInput, role, selectedCategory, mult)
+                            onAddUser(nameInput, role, selectedCategory, mult, rewardChoiceInput)
                             showAddDialog = false
                         }
                     }) {
@@ -213,6 +237,26 @@ fun ProfileManagementScreen(
                                 label = { Text("Multiplicateur (ex: 1.5)") },
                                 modifier = Modifier.fillMaxWidth()
                             )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text("Type de récompense :", fontWeight = FontWeight.Medium)
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Button(
+                                    onClick = { rewardChoiceInput = "MONEY" },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = if (rewardChoiceInput != "CANDY") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
+                                    )
+                                ) {
+                                    Text("💶 Argent")
+                                }
+                                Button(
+                                    onClick = { rewardChoiceInput = "CANDY" },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = if (rewardChoiceInput == "CANDY") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
+                                    )
+                                ) {
+                                    Text("🍬 Bonbon (2€=1)")
+                                }
+                            }
                         }
                     }
                 },
@@ -220,7 +264,7 @@ fun ProfileManagementScreen(
                     Button(onClick = {
                         if (nameInput.isNotBlank()) {
                             val mult = multiplierInput.replace(",", ".").toFloatOrNull() ?: 1.0f
-                            onUpdateProfile(editingUser!!.id, nameInput, selectedCategory, mult)
+                            onUpdateProfile(editingUser!!.id, nameInput, selectedCategory, mult, rewardChoiceInput)
                             editingUser = null
                         }
                     }) {
